@@ -37,6 +37,8 @@ cc_binary(
         "//mediapipe/modules/objectron:object_detection_ssd_mobilenetv2_oidv4_fp16.tflite",
     ],
     deps = [
+        # GG: Change to demo_run_graph_main
+        #"//mediapipe/examples/desktop:demo_run_graph_main",
         "//mediapipe/examples/desktop:simple_run_graph_main",
         "//mediapipe/graphs/object_detection_3d:desktop_cpu_calculators",
     ],

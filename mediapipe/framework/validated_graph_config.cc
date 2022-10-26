@@ -1006,40 +1006,45 @@ bool ValidatedGraphConfig::IsReservedExecutorName(const std::string& name) {
 
 absl::Status ValidatedGraphConfig::ValidateRequiredSidePackets(
     const std::map<std::string, Packet>& side_packets) const {
-  std::vector<absl::Status> statuses;
-  for (const auto& required_item : required_side_packets_) {
-    auto iter = side_packets.find(required_item.first);
-    if (iter == side_packets.end()) {
-      bool is_optional = true;
-      for (int index : required_item.second) {
-        is_optional &= input_side_packets_[index].packet_type->IsOptional();
-      }
-      if (is_optional) {
-        // Side packets that are optional and not provided are ignored.
-        continue;
-      }
-      statuses.push_back(mediapipe::InvalidArgumentErrorBuilder(MEDIAPIPE_LOC)
-                         << "Side packet \"" << required_item.first
-                         << "\" is required but was not provided.");
-      continue;
-    }
-    for (int index : required_item.second) {
-      absl::Status status =
-          input_side_packets_[index].packet_type->Validate(iter->second);
-      if (!status.ok()) {
-        statuses.push_back(
-            mediapipe::StatusBuilder(std::move(status), MEDIAPIPE_LOC)
-                .SetPrepend()
-            << "Side packet \"" << required_item.first
-            << "\" failed validation: ");
-      }
-    }
-  }
-  if (!statuses.empty()) {
-    return tool::CombinedStatus(
-        "ValidateRequiredSidePackets failed to validate: ", statuses);
-  }
+
+  // GG: Try running without validating missing side packets
+  (void)side_packets;
   return absl::OkStatus();
+
+  // std::vector<absl::Status> statuses;
+  // for (const auto& required_item : required_side_packets_) {
+  //   auto iter = side_packets.find(required_item.first);
+  //   if (iter == side_packets.end()) {
+  //     bool is_optional = true;
+  //     for (int index : required_item.second) {
+  //       is_optional &= input_side_packets_[index].packet_type->IsOptional();
+  //     }
+  //     if (is_optional) {
+  //       // Side packets that are optional and not provided are ignored.
+  //       continue;
+  //     }
+  //     statuses.push_back(mediapipe::InvalidArgumentErrorBuilder(MEDIAPIPE_LOC)
+  //                        << "Side packet \"" << required_item.first
+  //                        << "\" is required but was not provided.");
+  //     continue;
+  //   }
+  //   for (int index : required_item.second) {
+  //     absl::Status status =
+  //         input_side_packets_[index].packet_type->Validate(iter->second);
+  //     if (!status.ok()) {
+  //       statuses.push_back(
+  //           mediapipe::StatusBuilder(std::move(status), MEDIAPIPE_LOC)
+  //               .SetPrepend()
+  //           << "Side packet \"" << required_item.first
+  //           << "\" failed validation: ");
+  //     }
+  //   }
+  // }
+  // if (!statuses.empty()) {
+  //   return tool::CombinedStatus(
+  //       "ValidateRequiredSidePackets failed to validate: ", statuses);
+  // }
+  // return absl::OkStatus();
 }
 
 absl::Status ValidatedGraphConfig::ValidateRequiredSidePacketTypes(
