@@ -1,3 +1,6 @@
+# GG: Add my-* directories to gitignore
+my-*
+
 bazel-*
 mediapipe/MediaPipe.xcodeproj
 mediapipe/MediaPipe.tulsiproj/*.tulsiconf-user

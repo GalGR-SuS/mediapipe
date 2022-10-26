@@ -31,7 +31,13 @@
 
 set -e
 
-out_dir="."
+# GG: It is defined locally later in the script, but I might as-well define it here too
+export GLOG_logtostderr=1
+# GG: Bug workaround
+export PYTHON_BIN_PATH="C:\Program Files\Python310\python.exe"
+
+# GG: Change out_dir
+out_dir="my-examples-bin"
 build_only=false
 run_only=false
 app_dir="mediapipe/examples/desktop"
@@ -63,19 +69,27 @@ echo "out_dir: $out_dir"
 
 declare -a bazel_flags
 
+# GG: Create the output directory if missing
+if [[ ! -d "${out_dir}" ]]; then
+    mkdir -p "${out_dir}"
+fi
+
 apps="${app_dir}/*"
 for app in ${apps}; do
   if [[ -d "${app}" ]]; then
     target_name=${app##*/}
+    target="${app}:${target_name}_cpu"
+
     if [[ "${target_name}" == "autoflip" ||
           "${target_name}" == "hello_world" ||
           "${target_name}" == "media_sequence" ||
           "${target_name}" == "object_detection_3d" ||
+          # GG: Add "object_tracking" because although it runs, it crashes with Segmentation Fault when closing it, causing the script to stop
+          "${target_name}" == "object_tracking" ||
           "${target_name}" == "template_matching" ||
           "${target_name}" == "youtube8m" ]]; then
       continue
     fi
-    target="${app}:${target_name}_cpu"
 
     echo "=== Target: ${target}"
 
@@ -84,8 +98,10 @@ for app in ${apps}; do
       bazel_flags+=(${target})
 
       bazelisk "${bazel_flags[@]}"
-      cp -f "${bin_dir}/${app}/"*"_cpu" "${out_dir}"
+      # GG: Patch missing .exe
+      cp -f "${bin_dir}/${app}/"*"_cpu.exe" "${out_dir}"
     fi
+
     if [[ $build_only == false ]]; then
       if  [[ ${target_name} == "object_tracking" ]]; then
         graph_name="tracking/object_detection_tracking"
@@ -103,7 +119,8 @@ for app in ${apps}; do
       else
         graph_suffix="desktop_live"
       fi
-      GLOG_logtostderr=1 "${out_dir}/${target_name}_cpu" \
+      # GG: Patch missing .exe
+      GLOG_logtostderr=1 "${out_dir}/${target_name}_cpu.exe" \
         --calculator_graph_config_file=mediapipe/graphs/"${graph_name}_${graph_suffix}.pbtxt"
     fi
   fi
